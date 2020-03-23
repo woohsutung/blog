@@ -1,0 +1,15 @@
+ubuntu18.10/Kylin安装chromium浏览器的flashplayer插件 
+(2019-08-24 01:34:21)
+
+我的系统是基于ubuntu18.04的Kylin优麒麟。不知道为什么，今天系统自带的chromium的flash插件报需要升级，不能用了，经过一番小小的折腾，总算自己手工安装好了：
+1.点击升级，转到adobe官网页面，提示下载安装包，tar.gz格式的，点击下载
+2.下载结束后 cd ~/下载 ，进到下载目录， tar -zxvf  flash_player_ppapi_linux.x86_64.tar.gz 解开压缩
+3.提取出 libpepflashplayer.so 和 manifest.json 两个文件
+4.拷贝manifest.jason到/usr/lib/chromium-browser/目录下，打开文件记下flashplayer版本号
+5.拷贝libpepflashplayer.so到/usr/lib/pepperflashplugin-nonfree/目录下
+   以上两个cp命令需要sudo
+6.修改/etc/chromium-browser/default 文件，加上 下面这行：
+   CHROMIUM_FLAGS="--ppapi-flash-path=/usr/lib/pepperflashplugin-nonfree/libpepflashplayer.so --ppapi-flash-version=32.0.0.238"
+   其中32.0.0.238根据之前从manifest.json文件中记下的版本号修改
+
+重启chromium，一切正常了。如果还是提示不能播放，就右键运行插件即可。

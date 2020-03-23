@@ -1,0 +1,168 @@
+华为畅享5安装Google服务框架和Play商店 
+(2016-03-17 23:29:52)
+
+本文意译自XDA论坛，根据我的实际操作验证，做了小的修改。原文在最后也有，或者点以下链接
+http://forum.xda-developers.com/android/help/huawei-enjoy-5-tit-al00-install-google-t3274461
+
+本文比较长，但其实操作很简单，有点耐心一步一步操作都会成功。
+按照以下步骤就可以在全网通版本的畅享5上安装谷歌服务和Play商店，适用于所有ROM版本。理论上畅享5S也可以用。
+
+
+
+零、特别提醒
+
+1 安装完成后，OTA升级功能失效，无法通过 设置-系统更新 升级官方ROM，所以开始前还是先升级或降级到你最喜欢的官方版本。
+2 请事先备份手机数据。操作过程会抹掉所有手机数据。
+3 本方法没有root手机，运行su会闪退。不过建议大家还是不要root手机，风险太大，尤其在中国流氓软件横行的环境下。实际上我安装Play商店就是不想被国内的流氓市场害了。
+
+
+
+
+一、准备工作
+
+1 一部全网通畅享5手机。设置-关于手机-型号 请确认是 HUAWEI  TIT-L00
+2 ADB驱动程序 ADB Driver 文件名 UniversalAdbDriverSetup.exe
+3 ADB Fastboot软件  ADB Fastboot software
+4 CWM卡刷软件 CWM Recovery file 文件名 CWM_Recovery.img            
+5 谷歌服务框架卡刷包 GAPPS 文件名 gapps-forAndroid5.1-20150314.zip
+
+
+其中谷歌服务包有很多版本 我选的是80多M带Play商店的版本，还有几百M的包含所有谷歌应用的版本，都可以用，有需要的可以去OPENGAPPS.ORG去搜适配android5.1和Arm处理器的版本。不过国内访问速度有点慢。
+以上所有软件我已经都下载检测好，可以按这里http://cloud.189.cn/t/MBn6z2ZnQrUr 一键下载。
+
+7 电脑上在C盘根目录下建立一个adb文件夹，将下载的文件解压到这个文件夹c:\adb
+8 由于整个过程中会重置手机，抹掉所有信息，所以请务必先备份手机上的数据！
+
+
+
+二、安装ADB驱动
+
+1 电脑上回到c盘adb文件夹，双击adb驱动程序文件UniversalAdbDriverSetup.exe安装adb驱动，一路点yes即可。
+2 用usb线连接手机和电脑，手机上的通知区会出现一个USB图标，下拉通知区，点击“USB连接选项”，在屏幕底部打开“USB调试”开关。
+3 将c盘adb文件夹中的gapps-forAndroid5.1-20150314.zip文件拷贝到外置sd卡的根目录。注意是SD卡不是手机的存储空间！
+
+
+
+三、解锁手机
+
+1 手机上 设置-关于手机-状态信息 记下序列号和第一个IMEI号
+2 手机上，进入拨号界面，输入“*#*#1357946#*#*”，手机会跳出8位产品识别码，也请记下来
+3 到华为解锁网站https://emui.huawei.com/cn/plugin.php?id=unlock&mod=unlock&action=apply，这个网站需要华为帐号密码登录（和花粉俱乐部的帐号密码一样）。输入产品型号（TIT-L00），前面记下的IMEI，序列号，产品识别码。提交后就可以获得解锁码。记下这个解锁码。
+
+华为现在要求用手机连续14天访问华为云服务才能去官方解锁网站获得解锁码，我连续访问了5天去试，也给了我解锁码。访问华为云服务很简单，打开手机上华为云服务的app，上传一下通讯录即可。不过华为这招还是恶心，**！
+
+4 电脑上 windows键+r ，键入cmd，回车，启动命令行界面。
+5 电脑上在命令行界面中输入“c:”回车，在输入“cd \adb”回车 进入c:\adb目录。请确保在c:\adb下输入以下命令。
+6 继续在电脑上命令行界面输入“adb devices”回车，可以检查一下手机是否正确连接电脑  
+7 继续在电脑上命令行界面输入“adb reboot bootloader”回车，手机就会重启进入fastboot模式。这时候手机会黑屏，只在屏幕最下方显示“=> FASTBOOT mode...”
+
+8 请确认已经备份手机上的数据，因为执行下一步操作会抹掉手机上所有内容。
+
+9 继续在电脑上命令行界面输入“fastboot oem unlock xxxxxx”回车，其中xxxxxx为是从华为解锁网站获得的解锁码。  
+10继续在电脑上命令行界面输入“fastboot reboot”回车，手机会被重置重启
+11手机重新启动后，确保USB调试保持开启（方法同第二步安装ADB驱动的第2小步）
+
+四、刷入CWM卡刷软件 CWM Recovery
+1 继续在电脑上命令行界面输入“adb reboot bootloader”回车，手机重启再次进入fastboot模式。这时候手机会黑屏，只在屏幕最下方显示“=> FASTBOOT mode...”
+2 继续在电脑上命令行界面输入“adb devices”回车，可以检查一下手机是否正确连接电脑
+3 继续在电脑上命令行界面输入“fastboot flash recovery CWM_recovery.img”回车
+4 继续在电脑上命令行界面输入“fastboot reboot”然后一直按住手机上音量增大键不放，回车，继续按住手机上音量增大键不放直到重启完成
+
+五、通过CWM recovery刷入谷歌服务包
+1 手机重启后出现选项菜单，按音量增大键，移动右侧选择箭头“<=”到[Recovery mode]，然后按音量减小键选中，手机重启进入CWM Recovery界面
+2 在CWM Recovery 界面，按音量增大/减小键，上下移动光标到“Install ZIP”选项，按电源键选中
+3 在新界面中按音量增大/减小键，上下移动光标到“-choose zip from /external_sd”选项，按电源键选中
+4 在新界面中显示的是外置SD卡上的文件，按音量增大/减小键，上下移动光标到之前复制到sd卡上的“gapps-forAndroid5.1-20150314.zip”文件，按电源键选中
+5 刷机完成后在电脑上命令行界面输入“adb reboot”回车重启手机
+
+至此 谷歌服务包和Play商店已经刷到你的手机上。手机第一次重启过程因为要优化谷歌服务包时间会比较长。
+
+
+
+
+
+转自 http://forum.xda-developers.com/android/help/huawei-enjoy-5-tit-al00-install-google-t3274461
+
+This is to show you how to get Google Play on the Huawei Enjoy 5, which standard Chinese Stock ROM does not have Play store enabled.
+
+Note: when unlocking the phone and installing custom recovery, it might mean that the OTA updates don´t work anymore.
+Since we have not yet had an update since I installed this, I could not check, but this is what is said in the Huawei unlock site...
+
+Credits: my sincere thanks to andrik22, who guided me through the whole process...
+
+
+Prerequisites:
+Huawei Enjoy 5 phone (TIT-AL00)
+Huawei Unlock tool (attached)
+ADB drivers (attached)
+ADB / Fastboot software (attached)
+CWM Recovery file (attached)
+GAPPS Pico for ARM64, Android 5.1 --> Download from Opengapps.org
+
+Steps to complete:
+1. Install ADB Drivers
+2. Unzip ADB software in C:\adb
+3. Unzip CWM_Recovery.img in C:\adb
+4. Copy the GAPPS file into C:\adb
+
+C:\adb should look like this now:
+Screenshot C:\adb directory
+
+5. Now got to the phone and write down:
+Settings -->about phone --> Status--> IMEI 1 + Serial Number
+Find the IMEI 1 + Serial Number
+
+6. Connect phone by USB to computer
+7. Enable USB debugging on phone --> slide down the notification area and touch "USB connection options", then on the bottom of the screen enable "USB Debugging"
+7a. Copy the GAPPS file from C:\adb to the root of the external SD card on your phone
+
+8. Unzip and open the Unlock tool (you might need to disable the virus checker, as this will be flagged and deleted, at least this was the case with me) --> fill in IMEI 1, get Product ID, write that down.
+Unlock tool
+
+9. Go to the Huawei site to get your unlock code (log in with Facebook, or Huawei ID, fill in the required information product type = Smartphone, product ID = TIT-AL00, serial number from the phone, IMEI code, Product ID). Your unlock code will be below in Red)
+
+
+10. Startup command prompt (Windows key + R, type cmd, enter)
+11. In command prompt, type "cd \adb" to get to the adb directory
+12. In command prompt check if device is recognized (typing "adb devices" in the command prompt should show you this)
+13. Now reboot the phone into fastboot by typing "adb reboot bootloader"
+14. This should reboot the phone into fastboot mode (black screen, only showing "fastboot>" on the bottom
+15. In the command prompt, type "fastboot devices" to see if the device is recognized.
+Your screen should look something like this:
+
+
+The next command will unlock your phone AND make a hard reset... if any data or settings would need to be preserved, please make a backup!
+16. Now type in the command prompt:"fastboot oem unlock XXXXX" where XXXX is the unlock code you got from the website
+17. Then type in command prompt: "fastboot reboot". After this, your phone will reboot and reset.
+18. When Phone is rebooted, make sure USB debugging is on again (same as point 7)
+19. Now reboot the phone into fastboot by typing "adb reboot bootloader"
+20. This should reboot the phone into fastboot mode (black screen, only showing "fastboot>" on the bottom
+21. In the command prompt, type "fastboot devices" to see if the device is recognized.
+22. Now we are going to flash CWM Recovery: type in command prompt: "fastboot flash recovery CWM_recovery.img"
+23. reboot into recovery by typeing into command prompt: " "fastboot reboot" while holding VOL+ on the phone.
+24. When the options screen on the phone appears, press VOL- to select the recovery mode. This will boot into CWM recovery.
+25. In CWM recovery, select "install ZIP" and select "From Memory card" and select the Open Gapps file we have copied there in step 7a.
+26 When flashing is done, type into the command prompt: "adb reboot" to reboot the phone.
+
+This should reboot the phone. first 5 minutes it might be very slow as it is optimizing (Google) apps, but then Google Play store should be working on your phone!
+
+
+Attached Files
+File Type: zip CWM_recovery.zip - [Click for QR Code] (8.31 MB, 36 views)
+File Type: zip UniversalAdbDriverSetup.zip - [Click for QR Code] (15.90 MB, 32 views)
+File Type: zip ADB,Fastboot,USB-???????.zip - [Click for QR Code] (8.90 MB, 30 views)
+File Type: rar Huawei Unlocker_.rar - [Click for QR Code] (1.29 MB, 14 views)
+
+
+Attention!
+When installing SuperSU you can NOT get ROOT!!!
+You will receive a cyclic reboot. And for the restoration of the phone need flash original recovery, and then install the firmware from the official site (update.zip).
+
+Links:
+TWRP recovery
+Original Recovery
+Official page TIT-AL00
+Firmware version C00B128 from the official site and mirror. Size: 1,2 Gb
+
+The Chinese have made a mistake, inside the archive file located in the upgrade "dlaod" - is wrong, the folder should be called dload.
+Firmware from the official site installed only from original recovery, so if you have installed CWM recovery, you must first restore the original as it is written above, and already from it to make a clean install.

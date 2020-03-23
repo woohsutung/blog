@@ -1,0 +1,69 @@
+Redhat Enterprise Linux5/5.1调整Intel集成显卡分辨率 
+(2007-12-23 00:21:29)
+
+DELL D420笔记本主板是Intel945，集成GMA950显卡，安装完RHEL5/5.1后，分辨率保持在1024X768，无法填满1280X800的屏幕，于是（确保在root权限下安装）
+
+1.修正/etc/X11/xorg.conf ；查看类似下面的一段；
+ 
+ 
+Section "Screen"
+        Identifier "Screen0"
+        Device "Videocard0"
+        Monitor "Monitor0"
+        DefaultDepth 24
+        SubSection "Display"
+                Viewport 0 0
+                Depth 24
+                Modes "1280x800"
+        EndSubSection
+EndSection
+
+斜体部分为添加的内容
+
+2.下载915resolution软件包。
+到 http://atrpms.net/dist/el5/915resolution/ 下载915resolution-0.5.2-5.0.el5.i386.rpm 然后在图形界面下右键选择 用包管理器安装，自动安装完成
+
+3.用915resolution列出vbios的模式：用 -l参数；
+ 
+ 
+# 915resolution -l
+
+915resolution version 0.4, by Alain Poirier
+Chipset: 915GM (id=0x35808086)
+VBIOS type: 2
+VBIOS Version: 3360
+Mode 30 : 640x480, 8 bits/pixel
+Mode 32 : 800x600, 8 bits/pixel
+Mode 34 : 1024x768, 8 bits/pixel
+Mode 38 : 1280x1024, 8 bits/pixel
+Mode 3a : 1600x1200, 8 bits/pixel
+Mode 3c : 1920x1440, 8 bits/pixel
+Mode 41 : 640x480, 16 bits/pixel
+Mode 43 : 800x600, 16 bits/pixel
+Mode 45 : 1024x768, 16 bits/pixel
+Mode 49 : 1280x1024, 16 bits/pixel
+Mode 4b : 1600x1200, 16 bits/pixel
+Mode 4d : 1920x1440, 16 bits/pixel
+Mode 50 : 640x480, 32 bits/pixel
+Mode 52 : 800x600, 32 bits/pixel
+Mode 54 : 1024x768, 32 bits/pixel
+Mode 58 : 1280x1024, 32 bits/pixel
+Mode 5a : 1600x1200, 32 bits/pixel
+Mode 5c : 1920x1440, 32 bits/pixel
+Mode 7c : 1280x768, 8 bits/pixel
+Mode 7d : 1280x768, 16 bits/pixel
+Mode 7e : 1280x768, 32 bits/pixel
+
+然后运行915resolution，把Mode54的1024X768＠32（当前分辨率）改成1280X800
+
+＃915resolution 54 1280 800
+
+分辨率立即就会变成1280X800＠32bit。但是重启后还是1024X768的分辨率
+
+4.自动在开机时加再915resolution调整分辨率
+
+编辑 /etc/rc.d/rc.local 文件，添加
+915resolution 54 1280 800
+保存重启，就可在登录界面时获得1280X800的分辨率
+
+

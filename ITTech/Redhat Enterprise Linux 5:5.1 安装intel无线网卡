@@ -1,0 +1,51 @@
+Redhat Enterprise Linux 5/5.1 安装intel无线网卡 
+(2007-12-19 00:27:51)
+
+笔记本电脑安装了Redhat Enterprise Linux 5.1，主要是觉得比较稳定，所以没有装最流行的Fedora和Ubuntu。但是稳定的结果就是很多硬件没有办法使用，如果不安装驱动程序的话。
+
+Intel迅驰技术自带的无线网卡（Intel 2100/2200/2915/3945/4965）就无法被使用，主要原因是RHEL5的核心是2.6.18，只有2.6.21以上的核心才直接支持这些无线网卡。所以安装完成RHEL5/5.1后，还要安装无线网卡驱动，才能使用无线网络。
+
+下面这篇文章转载自Redhat网站，网址是 http://kbase.redhat.com/faq/FAQ_40_11044.shtm . 方括号里是我自己安装时的心得，供参考
+
+[由于安装驱动需要编译内核，所以在安装RHEL5/5.1的时候，一定要把所有和开发相关的软件选上安装（默认是不安装的）]
+Issue:
+How do I setup Intel 3945 wireless lan for Red Hat Enterprise Linux 5?
+
+[这篇文章是针对3945的，其实其他Intel无线网卡也一样]
+Resolution:
+This article is for setting up Wireless LAN for IPW3945 chipsets. To confirm if this hardware is present in the system, run the following command as root. If it returns a result, the hardware is present and may be configured:
+
+# lspci | grep 3945
+
+ 1. Install the following RPMS to the Red Hat Enterprise Linux 5 system from either the supplementary CDs or the Red Hat Network Supplementary channel for Red Hat Enterprise Linux 5:
+
+      RPMS for IPW3945:
+      ipw3945-ucode Firmware for Intel PRO/Wireless 3945 network adaptors
+      ipw3945d Regulatory Daemon for Intel PRO/Wireless 3945 Wireless
+      Network Adapters
+      kmod-ipw3945 ipw3945 kernel module(s)
+
+If using a CD, browse to the RPMS location and install manually using RPM.
+
+[建议直接从supplementary CD安装，把CD放进光驱，RHEL会自动Mount，选中上面三个文件（应该在supplementary目录中），右键选"用安装工具安装"即可（如果安装RHEL是没有选择安装和开发有关的软件，这时候会出现安装包依赖性错误）]
+
+From Red Hat Network:
+Alter the channel subscription for the targeted system to have "Red Hat Enterprise Linux 5 Supplementary" Channel enabled, and click "Change Subscription".  
+From the targeted system, run commands: # yum install ipw3945-ucode ipw3945d kmod-ipw3945
+
+Ensure that service ipw3945d is configured to run on next reboot:
+
+# chkconfig ipw3945d on
+
+Save any work, log out and reboot.  
+Create wireless connections and connect Network Manager.  
+
+Run the following commands:
+
+# chkconfig NetworkManager on
+# chkconfig NetworkManagerDispatcher on
+# service NetworkManager restart
+# service NetworkManagerDispatcher restart
+
+Log in as the user into GNOME environment and notice a new "blue" color applet appearing in the upper right hand corner.  
+Left-click on the new applet nm-applet and select a wireless connection in range to the notebook

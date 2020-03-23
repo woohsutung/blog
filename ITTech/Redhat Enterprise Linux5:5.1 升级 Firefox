@@ -1,0 +1,12 @@
+Redhat Enterprise Linux5/5.1 升级 Firefox 
+(2007-12-30 01:21:15)
+
+RHEL5/5.1自带的浏览器是Firefox1.5,  显然要我们自己升级到2.0。升级过程如下：
+
+以下文字摘自http://www.linuxfans.org/bbs/archiver/tid-177229.html ，略有删节。[ ]中是我自己安装的体会，属于原创:)
+
+1.从Mozilla官网上下载最新版的firefox，把它释放到  /usr/lib/  目录下。
+2.将释放出的文件夹/usr/lib/firefox ，更名为/usr/lib/firefox-2.0.0.1
+3.编辑/usr/bin/firefox 脚本文件，将里面的 firefox-1.5.0.2（你当前使用的版本号）替换为：firefox-2.0.0.1  [这个过程在X下面很容易完成]
+    $sed  's/firefox-1.5.0.2/firefox-2.0.0.1/g'  /usr/bin/firefox &gt; /tmp/ff
+    $mv  /tmp/ff  /usr/bin/firefox 

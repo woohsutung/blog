@@ -1,0 +1,35 @@
+三星I9220系统结构探讨(Galaxy Note) 
+(2012-10-07 21:40:09)
+
+以下文章来自 http://bbs.et8.net/live/archive/index.php/t-1045291.html
+ 
+目前网上能找到的教程都是在说下面这样的结构：
+* /boot
+* /system
+* /recovery
+* /data
+* /cache
+* /misc
+而且那些教程里面基本上说到手机内的存储都是 /dev/mtd/mtd? 这些个教程看了让我一头雾水，因为三星的系统完全不一样， 首先它的存储设备名称是 /dev/block/mmcblk0p?, 对应的文件夹少了 /boot 和/recovery. 下面是我的 9220的mount table:
+/dev/block/mmcblk0p9 on /system type ext4 (ro,relatime,barrier=1,data=ordered)
+/dev/block/mmcblk0p7 on /cache type ext4 (rw,nosuid,nodev,noatime,barrier=1,data=ordered)
+/dev/block/mmcblk0p1 on /efs type ext4 (rw,nosuid,nodev,noatime,barrier=1,data=ordered)
+/dev/block/mmcblk0p10 on /data type ext4
+/dev/block/mmcblk0p4 on /mnt/.lfs type j4fs (rw,relatime)
+/dev/block/vold/179:11 on /mnt/sdcard type vfat <--这个其实是 /dev/block/mmcblk0p11
+系统里面block设备一共分了12个区，除了上面几个，还有个 512M的 mmcblk0p12， 几乎是空的；
+1.25M的 mmcblk0p2 mmcblk0p3， 两个东西就差几个字节，内容和作用未知；
+8M的 mmcblk0p5（这个是重点）；
+8M的 mmcblk0p6 内容和作用未知。
+16M的 mmcblk0p8 = baseband, 一般下载到的 12m的modem.bin文件就是往这里写的。
+从网上下到的刷机包和kernel看， 这个 mmcblk0p5 就是kernel存放的地方。刷kernel就是把zImage一股脑儿写到这个分区。这个zImage里面除了kernel，还包括一个 initramfs, 就是一个小的ramdisk，里面可以放一些脚本和额外的程序来干活。
+那么三星的recovery在哪儿呢？ 就是在这个 mmcblk0p5里面。这个地方的kernel除了负责正常状态下的启动运行外，在系统进入恢复模式的时候也是它在跑，只是它检测到了系统在恢复模式所以干的活不一样了，界面也是恢复模式的界面。
+总结：
+i9220系统的分区和功能：
+/dev/block/mmcblk0p9 = /system = Windows的 系统盘， C:\windows
+/dev/block/mmcblk0p7 = /cache = Windows的临时文件， %temp%
+/dev/block/mmcblk0p1 = /efs = Windows的设备驱动
+/dev/block/mmcblk0p10 = /data = Windows的程序数据，%ProgramData%
+/dev/block/vold/179:11 = /dev/block/mmcblk0p11 = /mnt/sdcard = Windows的用户空间，可以装程序，放数据。
+/dev/block/mmcblk0p5 = PC的 BIOS，负责系统底层接口和系统恢复
+/dev/block/mmcblk0p8 = baseband
