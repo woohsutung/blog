@@ -1,0 +1,126 @@
+3.6.4 链接的本质
+
+ln是link的简写。要理解链接，先要理解Linux的文件，这里指普通文件。
+
+使用 ls -il 命令，你会得到一个类似以下的结果：
+
+402529 -rw-rw-r-- 1 fishinxihu fishinxihu 97 Sep 15 07:38 myfile
+
+402529 是文件的inode号码，这个号码指向硬盘上的一块区域，这块区域储存着文件的内容。Linux系统就是通过这串数字找到这个文件的。因此inode号码代表了系统里唯一的一个文件，是一个文件的唯一标识。
+
+myfile是402529这个文件的文件名（请大家注意，其实这个文件的绝对路径名称 /home/fishinxihu/Documents/myfile 才是这个文件的真正名称，myfile可以认为是这个文件的简称，因为不影响理解，我们就用myfile来代替），为什么已经有了inode号码代表文件，还需要一个文件名呢？是为了让人更容易识别，区分文件。
+
+以上两个基础概念对于理解链接非常重要，为了说清楚，我来打个比方，用人来和文件类比。
+
+比如说“北京市长安街100号502室张三”，这是一个人名，对应文件的绝对路径名；张三对应myfile这个文件名；inode就相当于张三的DNA。DNA是确定张三是不是张三的唯一标识。
+
+文件硬链接，本质上来讲，就是文件的另一个文件名。文件还那个文件，但是多了一个名字，但是并没有多生成一个文件。两个名字代表的文件的inode是相同的。如果用上面张三的例子作类比，硬链接相当于个张三起了个外号，比如老虎。老虎和张三都是同一个人，老虎和张三的DNA是一样的。具体如下
+
+$ ln myfile hl_myfile
+$ ls -li 
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 myfile
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 hl_myfile
+
+当我使用 rm myfile 命令时，因为myfile对应的文件有两个名字（系统从上面两行中加粗的2-文件的硬链接数来判断这个文件有2个名字），rm 命令只是去掉了文件的一个名字，而不会删除文件，myfile是无效了，但是硬链接文件hl_myfile依然存在。只有硬链接数为1的文件，rm命令才会真正删除文件。
+
+如果用人名来类比，相当于张三宣布，自己不用张三这个名字了，结果就是通过老虎这个名字依然可以找到张三这个人，而用张三反而找不到这个人了。具体如下：
+
+$ rm myfile
+$ ls -li 
+402529 -rw-rw-r-- 1 fishinxihu fishinxihu 97 Sep 15 07:38 hl_myfile
+
+当我们使用cp命令进行复制文件时，相当于在文件系统的另外一个地方凭空造出了一个内容相同的文件other_myfile（甚至文件名也可以一样，但是绝对路径文件名是不一样的），但实际上这个新造出来的文件other_myfile并不是原来的文件，他们的inode是不同的。之前文件的硬链接hl_myfile和这个新文件other_myfile无关。
+
+这就好比我们制造出一个和张三长得一模一样的一个孪生兄弟（甚至这个孪生兄弟名字也可以叫张三，前提是他们两个不能再同一个房间里；如果这个孪生兄弟不叫张三，他甚至可以和张三在同一个房间里），但这个孪生兄弟（比如叫张四）的DNA和张三的DNA是不同的，他们是两个人。张三的别名老虎，指的只是张三，和张四完全无关。具体如下：
+
+$ ln myfile hl_myfile
+$ ls -li 
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 myfile
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 hl_myfile
+$ cp myfile other_myfile
+$ ls -li
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 myfile
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 hl_myfile
+402530 -rw-rw-r-- 1 fishinxihu fishinxihu 97 Sep 15 07:39 other_myfile
+
+
+当我们使用mv命令移动文件时（用mv命令给文件改名与此相同原理）, myfile被移动到另外一个位置.. 只是文件的绝对路径名称发生了变化（所以Linux里文件改名和文件移动是一回事，都是用的mv命令），但实际上对于系统来讲inode不变，文件其实没有变化，所以硬链接hl_myfile还是指向同一个文件。
+
+这就好比张三走出房间到了长安街上，变成了北京长安街张三，但他还是那个张三，老虎也还是指的这个张三。具体如下：
+
+$ mv myfile ..
+$ ls -li 
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 hl_myfile 
+402530 -rw-rw-r-- 1 fishinxihu fishinxihu 97 Sep 15 07:39 other_myfile
+$ cd ..
+$ ls -li
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 myfile
+
+请注意只有文件可以有硬链接，目录是不能有硬链接的。如果对一个目录使用ln命令创建硬链接，系统会提示 ln:xxxx: hard link not allowed for directory
+
+有很多原因让系统禁止对目录进行硬链接，其中之一是，如果允许对目录进行硬链接，就可能会导致一个目录有可能有多个父目录！这与文件系统的树状结构规定的每个目录只能有一个父目录相矛盾，即允许目录的硬链接可能会打破文件系统目录的有向无环图结构，可能创建目录循环，这可能会导致fsck以及其他一些遍历文件树的软件出错。
+但用ls -l查看，就会发现所有的目录的链接计数至少是2，说明目录也有硬链接，其实这个硬链接是系统自动生成的，一个是目录中自己的.文件，一个是目录中子目录的..文件。
+
+
+文件的软链接（符号链接）实际上生成了一个新文件，并且这个新文件指向了原来的文件，新的文件有新的inode。这就好比给张三做了一张名片，名片和张三是并列的两个东西，名片有自己的DNA（唯一识别代码）：
+
+$ ln -s myfile sl_myfile
+$ ls -li 
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 myfile
+408084 lrwxrwxrwx 1 fishinxihu fishinxihu  1 Sep 15 08:38 sl_myfile -> myfile
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 hl_myfile
+
+软链接里是一串文本，记录了文件名（是绝对路径文件名还是相对路径文件名，取决于ln -s命令里对源文件使用的是哪种文件名，比如上面的例子就是相对路径文件名），软链接通过这个文件名来操作文件，而不是通过inode操作文件的。这就意味着尽管myfile和hl_myfile本质上是同一个文件，但sl_myfile只能通过myfile来操作inode号为402529的这个文件。这就好比名片上只印着张三的名字，所以通过名片你只能用张三这个名字找到这个人。
+
+当使用mv或者rm命令对源文件myfile进行改名，移动或者删除操作的话， myfile的文件名会不复存在，这时sl_myfile就会变成一个无效链接, 这时只要在原位置生成一个和原来文件同名的文件，链接就会恢复：
+
+$ ls -li 
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 myfile
+408084 lrwxrwxrwx 1 fishinxihu fishinxihu  1 Sep 15 08:38 sl_myfile -> myfile
+402529 -rw-rw-r-- 2 fishinxihu fishinxihu 97 Sep 15 07:38 hl_myfile
+$ rm myfile
+$ ls -li
+408084 lrwxrwxrwx 1 fishinxihu fishinxihu  1 Sep 15 08:38 sl_myfile -> myfile
+402529 -rw-rw-r-- 1 fishinxihu fishinxihu 97 Sep 15 07:38 hl_myfile
+$ touch myfile
+$ ls -li
+402530 -rw-rw-r-- 1 fishinxihu fishinxihu 0 Sep 15 07:38 myfile
+408084 lrwxrwxrwx 1 fishinxihu fishinxihu  1 Sep 15 08:38 sl_myfile -> myfile
+402529 -rw-rw-r-- 1 fishinxihu fishinxihu 97 Sep 15 07:38 hl_myfile
+
+
+对软链接文件的操作，系统会分成两种情况来处理：
+
+1.	直接操作软链接指向的源文件；
+2.	如果以上操作会导致软链接失效，则不会操作源文件，而改为操作软链接文件：
+
+简单说，所有导致源文件文件名发生变化的操作，比如mv，rm就不会作用于源文件上，而是直接作用在软链接文件上：
+
+$ mv sl_myfile ..
+$ ls -il
+34339947158749147 -rw-rw-r-- 2 fishinxihu fishinxihu   47 Sep 18 23:50 hl_myfile
+34339947158749147 -rw-rw-r-- 2 fishinxihu fishinxihu   47 Sep 18 23:50 myfile
+$ cd ..
+$ ls -il
+5348024557597313 lrwxrwxrwx 1 fishinxihu fishinxihu    6 Sep 18 23:52 sl_myfile -> myfile
+23362423067031808 drwxrwxr-x 1 fishinxihu fishinxihu 4096 Sep 18 23:53 temp
+
+上面的操作大家可以看见，mv  sl_myfile，并没有移动源文件myfile，因为移动了myfile，软链接文件sl_myfile就会失效，所以系统直接移动了sl_myfile文件（有趣的是，在这个例子中，移动后的sl_myfile也失效了，这是因为之前定义软链接时 ln -s myfile sl_myfile 用的是相对路径文件名，如果源文件用绝对路径名，那这个移动操作后，这个软链接依然有效）。
+
+其他对软链接的操作，比如cp等，只要不改变源文件的文件名，都会直接操作源文件：
+
+$ ls -il
+34339947158749147 -rw-rw-r-- 2 fishinxihu fishinxihu 47 Sep 18 23:50 hl_myfile
+34339947158749147 -rw-rw-r-- 2 fishinxihu fishinxihu 47 Sep 18 23:50 myfile
+64176294690043226 lrwxrwxrwx 1 fishinxihu fishinxihu  6 Sep 18 23:55 sl_myfile -> myfile
+$ cp sl_myfile ./newmyfile
+$ ls -il
+34339947158749147 -rw-rw-r-- 2 fishinxihu fishinxihu 47 Sep 18 23:50 hl_myfile
+34339947158749147 -rw-rw-r-- 2 fishinxihu fishinxihu 47 Sep 18 23:50 myfile
+ 6755399441150319 -rw-rw-r-- 1 fishinxihu fishinxihu 47 Sep 19 00:08 newmyfile
+64176294690043226 lrwxrwxrwx 1 fishinxihu fishinxihu  6 Sep 18 23:55 sl_myfile -> myfile
+
+上面的操作可以看见，复制生成的文件newmyfile和源文件myfile大小一致，说明复制的是源文件myfile而不是软链接文件sl_myfile。
+
+最后，软链接只是记录了一串字符串（文件名），所以目录可以有软链接。
+
